@@ -75,7 +75,7 @@ public class ContestBot {
 			}
 		}
 		else if (message.type.equals("result")) {
-			//ResultMessage r = (ResultMessage)message;
+			ResultMessage r = (ResultMessage)message;
 		}
 		else if (message.type.equals("error")) {
 			ErrorMessage e = (ErrorMessage)message;
@@ -100,5 +100,22 @@ public class ContestBot {
 
 		ContestBot cb = new ContestBot(host, port);
 		cb.run();
+	}
+	public boolean isChanllenge(MoveMessage m){
+		if(myHandQuality(m.state.hand,m.state.hand_id)>0){
+			return true;
+		}
+		else if(m.state.their_points>8){
+			return true;
+		}
+		return false;
+	}
+	public int myHandQuality(int[] hand,int hid){
+		for (int i=0;i<hand.length;i++){
+			if(hand[i]==13){
+				return 1;
+			}
+		}
+		return 0;
 	}
 }
