@@ -1,5 +1,7 @@
 package com.barracuda.contest2013;
 
+import com.barracuda.contest2013.ContestBot.HandStatus;
+
 public class GreetingMessage extends Message {
 	public int team_id;
 	public String sark;
@@ -10,6 +12,12 @@ public class GreetingMessage extends Message {
 		sb.append("\tteam_id: " + team_id + "\n");
 		sb.append("\tsark: " + sark + "\n");
 		return sb.toString();
+	}
+
+	@Override
+	public String sigPokerToString(HandStatus status) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
