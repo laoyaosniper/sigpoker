@@ -142,6 +142,7 @@ public class ContestBot {
 			}
 			catch (Exception e) {
 				System.err.println("Error: " + e.toString());
+				e.printStackTrace();
 				System.err.println("Reconnecting in " + RECONNECT_TIMEOUT + "s");
 				try {
 					Thread.sleep(RECONNECT_TIMEOUT * 1000);
@@ -244,7 +245,7 @@ public class ContestBot {
 //			return true;
 //		}
 		
-		return activeChallenge(m.state.hand, winTime, loseTime, m.state.their_points);
+		return activeChallenge(m.state.hand, winTime, loseTime, m.state.their_points, m.state.your_points);
 //		return true;
 	}
 	public boolean haveLostHand(MoveMessage m){
@@ -328,13 +329,16 @@ public class ContestBot {
 			return 1;
 		}
 	}
-	public boolean activeChallenge(int[] hand, int win, int lose, int theirPoint){
+	public boolean activeChallenge(int[] hand, int win, int lose, int theirPoint, int ourPoint){
 //		System.out.println("Active: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 
 		double p = 0.0;
 		double base = 0.4;
 		if ( theirPoint >= 9 ) {
 			return true;
+		}
+		if ( ourPoint >= 9 ) {
+			return false;
 		}
 		sort(hand);
 		if ( tiedTime == 0 ) {
@@ -532,16 +536,13 @@ public class ContestBot {
 	}
 
 	public boolean passiveChallenge(int[] hand, int win, int lose, int theirPoint, int ourPoint){
-		// Check tie
-		if ( hand.length + win + lose < 5) {
-//			System.out.println("Passive: Found Tie!");
-			return false;
-		}
-
 //		System.out.println("Passive: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 		double p = 0.0;
 		double base = 0.4;
 		if ( theirPoint >= 9 ) {
+			return true;
+		}
+		if ( ourPoint >= 9 ) {
 			return true;
 		}
 		sort(hand);
@@ -558,7 +559,7 @@ public class ContestBot {
 					}
 				}
 				else if ( ourPoint == 9 ) {
-					int boulder = 28;
+					int boulder = 30;
 
 					if ( sum >= boulder ) {
 						base = 0.5;
@@ -698,30 +699,18 @@ public class ContestBot {
 			else if ( win == 2 ) {
 				return true;
 			}
-			else if ( win == 0 && lose == 2 ) {
+			else if ( lose == 2 ) {
 				return false;
 			}
 		}
 		else if ( tiedTime == 2 ) {
 			if(win==0 && lose==0){
 				int sum = hand[0] + hand[1];
-				if ( ourPoint < 9 ) {
-					int boulder = 23;
-					if ( sum >= boulder) {
-						base = 0.7;
-						p = base + (sum - boulder) * 0.1; 
-						p = p * 0.8;
-					}
-				}
-				else if ( ourPoint == 9 ) {
-					int boulder = 24;
-
-					if ( sum >= boulder ) {
-						return true;
-					}
-					else {
-						return false;
-					}
+				int boulder = 23;
+				if ( sum >= boulder) {
+					base = 0.7;
+					p = base + (sum - boulder) * 0.1; 
+					p = p * 0.8;
 				}
 			}
 			else if ( win == 1 && lose == 0 ) {
