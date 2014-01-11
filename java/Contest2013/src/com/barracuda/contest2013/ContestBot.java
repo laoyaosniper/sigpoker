@@ -24,6 +24,7 @@ public class ContestBot {
 	private int loseTime = 0;
 	private int tiedTime = 0;
 	private int totalTime = 0;
+	private int strategy = 1;
 	public class DecisionMaker {
 		void onReceiveResult(Status status, ResultMessage r){
 			if ( r.result.type.equals("trick_won")) {
@@ -41,6 +42,7 @@ public class ContestBot {
 				loseTime = 0;
 				totalTime = 0;
 				tiedTime = 0;
+				strategy = 0;
 			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
@@ -58,11 +60,18 @@ public class ContestBot {
 				else {
 					if ( loseTime >= 1 ) index = 0;
 				}
+				
 			}
 			else{
 				isMyTurn = false;
 				index = minBigger(hand,m.state.card);
 				//in this round,they play first.
+			}
+			
+			if ( strategy == 1 ) {
+				if (totalTime == 1 ) {
+					index = hand[hand.length - 1];
+				}
 			}
 			return index;
 		}
@@ -112,24 +121,24 @@ public class ContestBot {
 			MoveMessage m = (MoveMessage)message;
 			if (game_id != m.state.game_id) {
 				game_id = m.state.game_id;
-				System.out.println("new game " + game_id);
+//				System.out.println("new game " + game_id);
 			}
 
-			System.out.println(m.toString());
+//			System.out.println(m.toString());
 
 			if (m.request.equals("request_card")) {
-				if (! m.state.can_challenge || isChanllenge(m) == false) {
+				if ( ! m.state.can_challenge || isChanllenge(m) == false || strategy == 1 && totalTime <=1) {
 					//int i = (int)(Math.random() * m.state.hand.length);
 					int i = dm.onReceiveRequest(status, m);
 					int[] hand = m.state.hand;
 					sort(hand);
 					PlayCardMessage card = new PlayCardMessage(m.request_id,hand[i]);
-					System.out.println(card.toString());
+//					System.out.println(card.toString());
 					return card;
 				}
 				else {
 					OfferChallengeMessage challenge = new OfferChallengeMessage(m.request_id);
-					System.out.println(challenge.toString());
+//					System.out.println(challenge.toString());
 					return challenge;
 				}
 			}
@@ -141,7 +150,7 @@ public class ContestBot {
 				else{
 					response = new RejectChallengeMessage(m.request_id);
 				}
-				System.out.println(response.toString());
+//				System.out.println(response.toString());
 				return response;
 			}
 		}
@@ -152,7 +161,7 @@ public class ContestBot {
 				totalGames++;
 				System.out.println("Won ratio: " + (double)wonGames/totalGames);
 			}
-				System.out.println(r.toString());
+//				System.out.println(r.toString());
 			dm.onReceiveResult(status, r);
 		}
 		else if (message.type.equals("error")) {
@@ -196,6 +205,7 @@ public class ContestBot {
 //		}
 		
 		return activeChallenge(m.state.hand, winTime, loseTime, m.state.their_points);
+//		return true;
 	}
 	public boolean haveLostHand(MoveMessage m){
 		if((m.state.your_tricks<m.state.their_tricks)
@@ -218,7 +228,8 @@ public class ContestBot {
 		else if(haveLostHand(m)){
 			return false;
 		}
-		return passiveChallenge(m.state.hand, winTime, loseTime, m.state.their_points);
+		return passiveChallenge(m.state.hand, winTime, loseTime, m.state.their_points, m.state.your_points);
+//		return true;
 	}
 	public int myHandQuality(int[] hand,int hid){
 		for (int i=0;i<hand.length;i++){
@@ -297,7 +308,9 @@ public class ContestBot {
 			if ( hand[0] >= 9 && hand[1] >= 9 && hand[2] >= 9
 				&& sum >= boulder) {
 				base = 0.4;
-				p = base + (sum - boulder) * 0.06; 
+				p = base + (sum - boulder) * 0.1; 
+				
+				if ( p >= 1.0 ) strategy = 1;
 			}
 		}
 		else if ( win == 1 && lose == 0 ) {
@@ -366,10 +379,11 @@ public class ContestBot {
 			}
 		}
 		
-		return (p > Math.random()) ? true : false; 
+		return (p > Math.random()) ? true : false;
+		
 	}
 
-	public boolean passiveChallenge(int[] hand, int win, int lose, int theirPoint){
+	public boolean passiveChallenge(int[] hand, int win, int lose, int theirPoint, int ourPoint){
 		// Check tie
 		if ( hand.length + win + lose < 5) {
 			System.out.println("Passive: Found Tie!");
@@ -385,12 +399,22 @@ public class ContestBot {
 		sort(hand);
 		if(win==0 && lose==0){
 			int sum = hand[0] + hand[1] + hand[2];
-			int boulder = 30;
-			if ( hand[0] >= 9 && hand[1] >= 9 && hand[2] >= 9
-				&& sum >= boulder) {
-				base = 0.4;
-				p = base + (sum - boulder) * 0.06; 
-				p = p * 0.9;
+			if ( ourPoint < 9 ) {
+				int boulder = 30;
+				if ( hand[0] >= 9 && hand[1] >= 9 && hand[2] >= 9
+						&& sum >= boulder) {
+					base = 0.4;
+					p = base + (sum - boulder) * 0.1; 
+					p = p * 0.9;
+				}
+			}
+			else if ( ourPoint == 9 ) {
+				int boulder = 27;
+
+				if ( sum >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.1;
+				}
 			}
 		}
 		else if ( win == 1 && lose == 0 ) {
