@@ -295,7 +295,7 @@ public class ContestBot {
 	public boolean activeChallenge(int[] hand, int win, int lose, int theirPoint){
 		// Check tie
 		if ( hand.length + win + lose < 5) {
-			System.out.println("Active: Found Tie!");
+//			System.out.println("Active: Found Tie!");
 			return false;
 		}
 //		System.out.println("Active: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
@@ -390,7 +390,7 @@ public class ContestBot {
 	public boolean passiveChallenge(int[] hand, int win, int lose, int theirPoint, int ourPoint){
 		// Check tie
 		if ( hand.length + win + lose < 5) {
-			System.out.println("Passive: Found Tie!");
+//			System.out.println("Passive: Found Tie!");
 			return false;
 		}
 
