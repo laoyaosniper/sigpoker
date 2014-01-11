@@ -59,6 +59,16 @@ public class ContestBot {
 			if(their_card<=0){
 				//in this round, I play first.
 				if (totalTime == 0 ) {
+					int idx=-1;
+					for(int i=0;i<hand.length;i++){
+						if(hand[i]<10){
+							idx = i;
+							break;
+						}
+					}
+					index = 2>idx?idx:2;
+				}
+				else if(totalTime == 1){
 					index = 2;
 				}
 				else {
@@ -78,6 +88,9 @@ public class ContestBot {
 				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>6)){
 					index = hand.length-1;
 				}
+				else if(findCard(hand,m.state.card)==hand.length-1&&(hand[minBigger(hand,m.state.card)]-m.state.card>6)){
+					index = findCard(hand,m.state.card);
+				}
 				else{
 				index = minBigger(hand,m.state.card);
 				}
@@ -93,7 +106,15 @@ public class ContestBot {
 			return index;
 		}
 	}
-	
+	private int findCard(int[] hand, int card){
+		int index = -2;
+		for(int i=0;i<hand.length;i++){
+			if(hand[i]==card){
+				index = i;
+			}
+		}
+		return index;
+	}
 	
 	private void run() {
 		dm = new DecisionMaker();
