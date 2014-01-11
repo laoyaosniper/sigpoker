@@ -57,6 +57,9 @@ public class ContestBot {
 				if (totalTime == 0 ) {
 					index = 2;
 				}
+				else if(totalTime == 1){
+					index = 2;
+				}
 				if ( tiedTime == 0 ) {
 					if ( winTime == 1 && loseTime == 2)	index = 0;
 				}
