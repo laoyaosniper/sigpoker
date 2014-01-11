@@ -9,6 +9,7 @@ import java.io.IOException;
 public class ContestBot {
 	private static final int RECONNECT_TIMEOUT = 15; // seconds
 
+	private boolean ENABLE_BOOST = true;
 	private final String host;
 	private final int port;
 	private int game_id = -1;
@@ -50,7 +51,6 @@ public class ContestBot {
 			sort(hand);
 			if(their_card<=0){
 				//in this round, I play first.
-				isMyTurn = true;
 				index = secondBigger(hand);
 				if ( tiedTime == 0 ) {
 					if ( winTime == 1 && loseTime == 2)	index = 0;
@@ -60,8 +60,12 @@ public class ContestBot {
 				}
 			}
 			else{
-				isMyTurn = false;
+				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>8)){
+					index = hand.length-1;
+				}
+				else{
 				index = minBigger(hand,m.state.card);
+				}
 				//in this round,they play first.
 			}
 			return index;
