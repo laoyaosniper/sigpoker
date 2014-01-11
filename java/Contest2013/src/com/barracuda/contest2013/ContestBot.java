@@ -90,7 +90,7 @@ public class ContestBot {
 				}
 				else if((findCard(hand,m.state.card)==hand.length-1||
 						findCard(hand,m.state.card)==hand.length-2)
-						&&(hand[minBigger(hand,m.state.card)]-m.state.card>6)){
+						&&(m.state.card<=4)){
 					index = findCard(hand,m.state.card);
 				}
 				else{
