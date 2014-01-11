@@ -127,7 +127,7 @@ public class ContestBot {
 			if ( r.result.type.equals("game_won") ) {
 				if ( r.result.by == r.your_player_num ) wonGames++;
 				totalGames++;
-				System.out.println("Won ratio: " + wonGames/totalGames);
+				System.out.println("Won ratio: " + (double)wonGames/totalGames);
 			}
 				//System.out.println(r.toString());
 			dm.onReceiveResult(status, r);
