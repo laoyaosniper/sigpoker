@@ -55,7 +55,14 @@ public class ContestBot {
 				//in this round, I play first.
 				index = secondBigger(hand);
 				if (totalTime == 0 ) {
-					index = 2;
+					int idx=-1;
+					for(int i=0;i<hand.length;i++){
+						if(hand[i]<10){
+							idx = i;
+							break;
+						}
+					}
+					index = 2>idx?idx:2;
 				}
 				else if(totalTime == 1){
 					index = 2;
