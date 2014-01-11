@@ -66,7 +66,7 @@ public class ContestBot {
 							break;
 						}
 					}
-					index = 2>idx?idx:2;
+					index = 2>idx?2:idx;
 				}
 				else if(totalTime == 1){
 					index = 2;
@@ -88,7 +88,9 @@ public class ContestBot {
 				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>6)){
 					index = hand.length-1;
 				}
-				else if(findCard(hand,m.state.card)==hand.length-1&&(hand[minBigger(hand,m.state.card)]-m.state.card>6)){
+				else if((findCard(hand,m.state.card)==hand.length-1||
+						findCard(hand,m.state.card)==hand.length-2)
+						&&(hand[minBigger(hand,m.state.card)]-m.state.card>6)){
 					index = findCard(hand,m.state.card);
 				}
 				else{
@@ -107,7 +109,7 @@ public class ContestBot {
 		}
 	}
 	private int findCard(int[] hand, int card){
-		int index = -2;
+		int index = -3;
 		for(int i=0;i<hand.length;i++){
 			if(hand[i]==card){
 				index = i;
