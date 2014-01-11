@@ -103,6 +103,7 @@ public class ContestBot {
 		for(int i=0;i<hand.length;i++){
 			if(hand[i]==card){
 				index = i;
+				break;	
 			}
 		}
 		return index;
