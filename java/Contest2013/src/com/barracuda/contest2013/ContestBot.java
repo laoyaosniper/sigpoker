@@ -69,9 +69,16 @@ public class ContestBot {
 				}
 			}
 			else if (m.request.equals("challenge_offered")) {
-				return (Math.random() < 0.5)
+				/*return (Math.random() < 0.5)
 						? new AcceptChallengeMessage(m.request_id)
 						: new RejectChallengeMessage(m.request_id);
+						*/
+				if(acceptChallenge(m)){
+					return new AcceptChallengeMessage(m.request_id);
+				}
+				else{
+					return new RejectChallengeMessage(m.request_id);
+				}
 			}
 		}
 		else if (message.type.equals("result")) {
@@ -125,6 +132,12 @@ public class ContestBot {
 		return false;
 	}
 	public boolean acceptChallenge(MoveMessage m){
+		if(haveWinHand(m)){
+			return true;
+		}
+		else if(haveLostHand(m)){
+			return false;
+		}
 		return false;
 	}
 	public int myHandQuality(int[] hand,int hid){
