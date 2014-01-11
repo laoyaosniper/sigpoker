@@ -104,6 +104,11 @@ public class ContestBot {
 //					index = hand.length - 1;
 //				}
 //			}
+			if ( hand.length != 2) {
+				System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
+				System.err.println("Hand: " + hand.toString());
+				System.err.println("Index:" + index);
+			}
 			myLastCard = hand[index];
 			return index;
 		}
@@ -368,6 +373,10 @@ public class ContestBot {
 				}
 			}
 			else if ( win == 0 && lose == 1 ) {
+				if ( hand.length != 3) {
+					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
+					System.err.println("Hand: " + hand.toString());
+				}
 				int sum = hand[0] + hand[1] + hand[2];
 				int boulder = 27;
 				if ( sum >= boulder ) {
@@ -413,6 +422,10 @@ public class ContestBot {
 				}
 			}
 			else if ( win == 1 && lose == 2) {
+				if ( hand.length != 2) {
+					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
+					System.err.println("Hand: " + hand.toString());
+				}
 				int sum = hand[0] + hand[1];
 				int boulder = 24;
 				if ( sum >= boulder ) {
@@ -530,6 +543,13 @@ public class ContestBot {
 			}
 			else if ( win == 0 && lose == 1 ) {
 				return false;
+			}
+		}
+		else if ( tiedTime == 4 ) {
+			if( win == 0 && lose == 0 ) {
+				int sum = hand[0];
+				if ( sum == 13 ) return true;
+				else return false;
 			}
 		}
 		
@@ -751,6 +771,11 @@ public class ContestBot {
 					return false;
 				}
 			}
+		}
+		else if ( tiedTime == 3 ) {
+			int sum = hand[0];
+			if ( sum == 13 ) return true;
+			else return false;
 		}
 		return (p > Math.random()) ? true : false; 
 	}
