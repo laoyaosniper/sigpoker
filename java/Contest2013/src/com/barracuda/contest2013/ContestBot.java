@@ -54,6 +54,9 @@ public class ContestBot {
 			if(their_card<=0){
 				//in this round, I play first.
 				index = secondBigger(hand);
+				if (totalTime == 0 ) {
+					index = 2;
+				}
 				if ( tiedTime == 0 ) {
 					if ( winTime == 1 && loseTime == 2)	index = 0;
 				}
@@ -131,7 +134,9 @@ public class ContestBot {
 //			System.out.println(m.toString());
 
 			if (m.request.equals("request_card")) {
-				if ( ! m.state.can_challenge || isChanllenge(m) == false || strategy == 1 && totalTime <=1) {
+				boolean shouldPlay = (! m.state.can_challenge || isChanllenge(m) == false);
+				shouldPlay = shouldPlay || (strategy == 1 && totalTime <=1);
+				if ( shouldPlay ) {
 					//int i = (int)(Math.random() * m.state.hand.length);
 					int i = dm.onReceiveRequest(status, m);
 					int[] hand = m.state.hand;
@@ -360,7 +365,7 @@ public class ContestBot {
 		}
 		else if ( win == 2 && lose == 1) {
 			int sum = hand[0];
-			int boulder = 9;
+			int boulder = 11;
 			if ( sum >= boulder ) {
 				base = 0.6;
 				p = base + (sum - boulder) * 0.15;
@@ -368,7 +373,7 @@ public class ContestBot {
 		}
 		else if ( win == 1 && lose == 2) {
 			int sum = hand[0] + hand[1];
-			int boulder = 20;
+			int boulder = 21;
 			if ( sum >= boulder ) {
 				base = 0.5;
 				p = base + (sum - boulder) * 0.2;
@@ -468,7 +473,7 @@ public class ContestBot {
 		}
 		else if ( win == 2 && lose == 1) {
 			int sum = hand[0];
-			int boulder = 9;
+			int boulder = 11;
 			if ( sum >= boulder ) {
 				base = 0.6;
 				p = base + (sum - boulder) * 0.15;
@@ -478,7 +483,7 @@ public class ContestBot {
 		}
 		else if ( win == 1 && lose == 2) {
 			int sum = hand[0] + hand[1];
-			int boulder = 20;
+			int boulder = 21;
 			if ( sum >= boulder ) {
 				base = 0.5;
 				p = base + (sum - boulder) * 0.2;
