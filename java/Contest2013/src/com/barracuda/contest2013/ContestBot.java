@@ -24,8 +24,13 @@ public class ContestBot {
 	
 	public class DecisionMaker {
 		void onReceiveResult(Status status, ResultMessage r){
-			if(isMyTurn&&(r.result.by==r.your_player_num)){
+			
+			if(isMyTurn && r.result.by != null && (r.result.by==r.your_player_num)){
 				chanllengeNextTime = true;
+			}
+			
+			if ( r.result.type.equals("hand_done") || r.result.type.equals("game_won")) {
+				chanllengeNextTime = false;
 			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
