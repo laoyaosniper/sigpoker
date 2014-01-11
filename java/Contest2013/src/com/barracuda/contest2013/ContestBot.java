@@ -104,10 +104,14 @@ public class ContestBot {
 //					index = hand.length - 1;
 //				}
 //			}
-			if ( hand.length != 2) {
-				System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
-				System.err.println("Hand: " + hand.toString());
-				System.err.println("Index:" + index);
+			if ( index < 0 || index >= hand.length ) {
+				System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime);
+				System.err.println("Hand: ");
+				for ( int x : hand ) {
+					System.err.print(x + " ");
+				}
+				
+				System.err.println("\nIndex:" + index + "\n");
 			}
 			myLastCard = hand[index];
 			//return hand[0];
@@ -349,6 +353,14 @@ public class ContestBot {
 		if ( ourPoint >= 9 ) {
 			return false;
 		}
+
+		if ( theirPoint >= 7 && ourPoint <=5 ) {
+			return true;
+		}
+		if ( theirPoint >= 8 && ourPoint <=7 ) {
+			return true;
+		}
+		
 		sort(hand);
 		if ( tiedTime == 0 ) {
 			if(win==0 && lose==0){
@@ -375,9 +387,12 @@ public class ContestBot {
 				}
 			}
 			else if ( win == 0 && lose == 1 ) {
-				if ( hand.length != 3) {
+				if ( hand.length != 4) {
 					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
-					System.err.println("Hand: " + hand.toString());
+					System.err.println("Hand: ");
+					for ( int x : hand ) {
+						System.err.print(x + " ");
+					}
 				}
 				int sum = hand[0] + hand[1] + hand[2];
 				int boulder = 27;
@@ -426,7 +441,10 @@ public class ContestBot {
 			else if ( win == 1 && lose == 2) {
 				if ( hand.length != 2) {
 					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
-					System.err.println("Hand: " + hand.toString());
+					System.err.println("Hand: ");
+					for ( int x : hand ) {
+						System.err.print(x + " ");
+					}
 				}
 				int sum = hand[0] + hand[1];
 				int boulder = 24;
@@ -563,6 +581,8 @@ public class ContestBot {
 //		System.out.println("Passive: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 		double p = 0.0;
 		double base = 0.4;
+		
+//		return true;
 		if ( theirPoint >= 9 ) {
 			return true;
 		}
@@ -646,12 +666,11 @@ public class ContestBot {
 				if ( sum == 13 ) {	// must win
 					return true;
 				}
+				
 				int boulder = 11;
 				if ( sum >= boulder ) {
-					base = 0.6;
-					p = base + (sum - boulder) * 0.15;
-
-					p = p*1.1;
+					base = 0.5;
+					p = base + (sum - boulder) * 0.25;
 				}
 			}
 			else if ( win == 1 && lose == 2) {
