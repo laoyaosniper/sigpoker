@@ -12,7 +12,7 @@ public class ContestBot {
 	private final String host;
 	private final int port;
 	private int game_id = -1;
-
+	private int current_hand=-1;
 	public ContestBot(String host, int port) {
 		this.host = host;
 		this.port = port;
@@ -68,15 +68,7 @@ public class ContestBot {
             System.out.println(m.toString());
             
 			if (m.request.equals("request_card")) {
-	            if ( m.state.card > 0 ) {
-	              myStatus = HandStatus.RESPONSE;
-	            }
-	            else {
-	              myStatus = HandStatus.ISSUE;
-	            }
-	            System.out.println(m.sigPokerToString(myStatus));
-	            
-				if (! m.state.can_challenge || Math.random() < 0.8) {
+				if (! m.state.can_challenge || isChanllenge(m) == false) {
 					int i = (int)(Math.random() * m.state.hand.length);
 					PlayCardMessage card = new PlayCardMessage(m.request_id, m.state.hand[i]);
 //					System.out.println(card.sigPokerToString(myStatus));
@@ -92,24 +84,22 @@ public class ContestBot {
 			}
 			else if (m.request.equals("challenge_offered")) {
 			  PlayerMessage response;
-			  if ( Math.random() < 0.5 ) {
+				/*return (Math.random() < 0.5)
+						? new AcceptChallengeMessage(m.request_id)
+						: new RejectChallengeMessage(m.request_id);
+						*/
+				if(acceptChallenge(m)){
 			    response = new AcceptChallengeMessage(m.request_id);
-			  }
-			  else {
-			    response = new RejectChallengeMessage(m.request_id);
-			  }
-//			  System.out.println(response.sigPokerToString(myStatus));
-			  System.out.println(response.toString());
-			  return response;
-//				return (Math.random() < 0.5)
-//						? new AcceptChallengeMessage(m.request_id)
-//						: new RejectChallengeMessage(m.request_id);
+				}
+				else{
+          response = new RejectChallengeMessage(m.request_id);
+				}
+        System.out.println(response.toString());
+        return response;
 			}
 		}
 		else if (message.type.equals("result")) {
-		  
 			ResultMessage r = (ResultMessage)message;
-//	        System.out.println(r.sigPokerToString(myStatus));
 			System.out.println(r.toString());
 		}
 		else if (message.type.equals("error")) {
@@ -135,5 +125,68 @@ public class ContestBot {
 
 		ContestBot cb = new ContestBot(host, port);
 		cb.run();
+	}
+	public boolean isChanllenge(MoveMessage m){
+		if(myHandQuality(m.state.hand,m.state.hand_id)>0){
+			return true;
+		}
+		else if(m.state.their_points>8){
+			return true;
+		}
+		return false;
+	}
+	public boolean haveLostHand(MoveMessage m){
+		if((m.state.your_tricks<m.state.their_tricks)
+				&&(Math.abs(m.state.their_tricks-m.state.your_tricks)>(5-m.state.total_tricks) )){
+			return true;
+		}
+		return false;
+	}
+	public boolean haveWinHand(MoveMessage m){
+		if((m.state.your_tricks>m.state.their_tricks)
+				&&(Math.abs(m.state.their_tricks-m.state.your_tricks)>(5-m.state.total_tricks) )){
+			return true;
+		}
+		return false;
+	}
+	public boolean acceptChallenge(MoveMessage m){
+		if(haveWinHand(m)){
+			return true;
+		}
+		else if(haveLostHand(m)){
+			return false;
+		}
+		return false;
+	}
+	public int myHandQuality(int[] hand,int hid){
+		for (int i=0;i<hand.length;i++){
+			if(hand[i]==13){
+				return 1;
+			}
+		}
+		return 0;
+	}
+	public static int[] sort(int[] hand){
+		int tmp;
+		for(int i=0;i<hand.length;i++){
+			for(int j=hand.length-1;j>i;j--){
+				if(hand[j]>hand[j-1]){
+					tmp = hand[j];
+					hand[j] = hand[j-1];
+					hand[j-1] = tmp;
+				}
+			}
+		}
+		return hand;
+	}
+	//called after sort();
+	public int minBigger(int [] hand, int card){
+		int index = -1;
+		for(int i=0;i<hand.length;i++){
+			if(hand[i]>card){
+				index = i;
+			}
+		}
+		return index;
 	}
 }
