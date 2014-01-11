@@ -26,16 +26,19 @@ public class ContestBot {
 	private int tiedTime = 0;
 	private int totalTime = 0;
 	private int strategy = 1;
+	private int myLastCard = -1;
+	private int theirLastCard = -1;
 	public class DecisionMaker {
 		void onReceiveResult(Status status, ResultMessage r){
 			if ( r.result.type.equals("trick_won")) {
 				if ( r.result.by == r.your_player_num ) winTime++;
 				else loseTime++;
-				
+				theirLastCard = r.result.card;
 				totalTime++;
 			}
 			if ( r.result.type.equals("trick_tied")) {
 				tiedTime++;
+				theirLastCard = myLastCard;
 				totalTime++;
 			}
 			if ( r.result.type.equals("hand_done") ) {
@@ -44,6 +47,8 @@ public class ContestBot {
 				totalTime = 0;
 				tiedTime = 0;
 				strategy = 0;
+				myLastCard = -1;
+				theirLastCard = -1;
 			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
@@ -69,7 +74,8 @@ public class ContestBot {
 				
 			}
 			else{
-				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>7)){
+				theirLastCard = their_card;
+				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>6)){
 					index = hand.length-1;
 				}
 				else{
@@ -78,11 +84,12 @@ public class ContestBot {
 				//in this round,they play first.
 			}
 			
-			if ( strategy == 1 ) {
-				if (totalTime == 1 ) {
+			if ( m.state.can_challenge && strategy == 1 ) {
+				if (totalTime == 1 || totalTime == 0) {
 					index = hand.length - 1;
 				}
 			}
+			myLastCard = hand[index];
 			return index;
 		}
 	}
@@ -311,7 +318,7 @@ public class ContestBot {
 		double p = 0.0;
 		double base = 0.4;
 		if ( theirPoint >= 9 ) {
-			base = 1.0;
+			return true;
 		}
 		sort(hand);
 		if(win==0 && lose==0){
@@ -328,7 +335,11 @@ public class ContestBot {
 		else if ( win == 1 && lose == 0 ) {
 			int sum = hand[0] + hand[1];
 			int boulder = 20;
-			if ( sum >= boulder ) {
+			int decrement = 0;
+			if ( theirLastCard > 0 && theirLastCard < 6 ) {
+				decrement  = 6 - theirLastCard;
+			}
+			if ( sum - decrement >= boulder ) {
 				base = 0.5;
 				p = base + (sum - boulder) * 0.1;
 			}
@@ -351,7 +362,7 @@ public class ContestBot {
 		}
 		else if ( win == 0 && lose == 2 ) {
 			int sum = hand[0] + hand[1] + hand[2];
-			int boulder = 30;
+			int boulder = 33;
 			if ( sum >= boulder ) {
 				base = 0.8;
 				p = base + (sum - boulder) * 0.2;
@@ -376,9 +387,9 @@ public class ContestBot {
 		}
 		else if ( win == 1 && lose == 2) {
 			int sum = hand[0] + hand[1];
-			int boulder = 21;
+			int boulder = 23;
 			if ( sum >= boulder ) {
-				base = 0.5;
+				base = 0.8;
 				p = base + (sum - boulder) * 0.2;
 			}
 		}
@@ -406,7 +417,7 @@ public class ContestBot {
 		double p = 0.0;
 		double base = 0.4;
 		if ( theirPoint >= 9 ) {
-			base = 1.0;
+			return true;
 		}
 		sort(hand);
 		if(win==0 && lose==0){
