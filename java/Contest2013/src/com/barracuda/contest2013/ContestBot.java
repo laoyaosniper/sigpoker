@@ -52,6 +52,9 @@ public class ContestBot {
 			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
+			if(m.state.hand_id==1&&m.state.in_challenge==false&&m.state.card>0){
+				return 9999;
+			}
 			int index = -1;
 			int hand[] = m.state.hand;
 			int their_card = m.state.card;
@@ -184,6 +187,12 @@ public class ContestBot {
 				if ( shouldPlay ) {
 					//int i = (int)(Math.random() * m.state.hand.length);
 					int i = dm.onReceiveRequest(status, m);
+					//////////////
+					if(i==9999){
+					OfferChallengeMessage challenge = new OfferChallengeMessage(m.request_id);
+					return challenge;
+					}
+					//////////////
 					int[] hand = m.state.hand;
 					sort(hand);
 					PlayCardMessage card = new PlayCardMessage(m.request_id,hand[i]);
