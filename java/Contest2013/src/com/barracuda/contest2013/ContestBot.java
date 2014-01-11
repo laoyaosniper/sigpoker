@@ -64,9 +64,9 @@ public class ContestBot {
 
 				while (true) {
 					Message message = sock.getMessage();
-		
+
 					PlayerMessage response = handleMessage(message);
-		
+
 					if (response != null) {
 						sock.sendMessage(response);
 					}
@@ -84,11 +84,14 @@ public class ContestBot {
 	}
 
 	public enum HandStatus {
-	  ISSUE, RESPONSE, RESULT
+		ISSUE, RESPONSE, RESULT
 	}
-	
+
 	public HandStatus myStatus;
-	
+
+	public int wonGames = 0;
+	public int totalGames = 0;
+
 	public PlayerMessage handleMessage(Message message) {
 		if (message.type.equals("request")) {
 			MoveMessage m = (MoveMessage)message;
@@ -96,9 +99,9 @@ public class ContestBot {
 				game_id = m.state.game_id;
 				System.out.println("new game " + game_id);
 			}
-			
-            System.out.println(m.toString());
-            
+
+//			System.out.println(m.toString());
+
 			if (m.request.equals("request_card")) {
 				if (! m.state.can_challenge || isChanllenge(m) == false) {
 					//int i = (int)(Math.random() * m.state.hand.length);
@@ -106,35 +109,36 @@ public class ContestBot {
 					int[] hand = m.state.hand;
 					sort(hand);
 					PlayCardMessage card = new PlayCardMessage(m.request_id,hand[i]);
-					System.out.println(card.toString());
+//					System.out.println(card.toString());
 					return card;
 				}
 				else {
 					OfferChallengeMessage challenge = new OfferChallengeMessage(m.request_id);
-					System.out.println(challenge.toString());
+//					System.out.println(challenge.toString());
 					return challenge;
 				}
 			}
 			else if (m.request.equals("challenge_offered")) {
-			  PlayerMessage response;
-				/*return (Math.random() < 0.5)
-						? new AcceptChallengeMessage(m.request_id)
-						: new RejectChallengeMessage(m.request_id);
-						*/
+				PlayerMessage response;
 				if(acceptChallenge(m)){
-			    response = new AcceptChallengeMessage(m.request_id);
+					response = new AcceptChallengeMessage(m.request_id);
 				}
 				else{
-          response = new RejectChallengeMessage(m.request_id);
+					response = new RejectChallengeMessage(m.request_id);
 				}
-        System.out.println(response.toString());
-        return response;
+				//System.out.println(response.toString());
+				return response;
 			}
 		}
 		else if (message.type.equals("result")) {
 			ResultMessage r = (ResultMessage)message;
+			if ( r.result.type.equals("game_won") ) {
+				if ( r.result.by == r.your_player_num ) wonGames++;
+				totalGames++;
+				System.out.println("Won ratio: " + (double)wonGames/totalGames);
+			}
+				//System.out.println(r.toString());
 			dm.onReceiveResult(status, r);
-			System.out.println(r.toString());
 		}
 		else if (message.type.equals("error")) {
 			ErrorMessage e = (ErrorMessage)message;
