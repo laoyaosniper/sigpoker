@@ -312,7 +312,7 @@ public class ContestBot {
 			if ( hand[0] >= 9 && hand[1] >= 9 && hand[2] >= 9
 				&& sum >= boulder) {
 				base = 0.4;
-				p = base + (sum - boulder) * 0.1; 
+				p = base + (sum - boulder) * 0.20; 
 				
 				if ( p >= 1.0 ) strategy = 1;
 			}
