@@ -12,7 +12,7 @@ public class ContestBot {
 	private final String host;
 	private final int port;
 	private int game_id = -1;
-
+	private int current_hand=-1;
 	public ContestBot(String host, int port) {
 		this.host = host;
 		this.port = port;
@@ -110,6 +110,23 @@ public class ContestBot {
 		}
 		return false;
 	}
+	public boolean haveLostHand(MoveMessage m){
+		if((m.state.your_tricks<m.state.their_tricks)
+				&&(Math.abs(m.state.their_tricks-m.state.your_tricks)>(5-m.state.total_tricks) )){
+			return true;
+		}
+		return false;
+	}
+	public boolean haveWinHand(MoveMessage m){
+		if((m.state.your_tricks>m.state.their_tricks)
+				&&(Math.abs(m.state.their_tricks-m.state.your_tricks)>(5-m.state.total_tricks) )){
+			return true;
+		}
+		return false;
+	}
+	public boolean acceptChallenge(MoveMessage m){
+		return false;
+	}
 	public int myHandQuality(int[] hand,int hid){
 		for (int i=0;i<hand.length;i++){
 			if(hand[i]==13){
@@ -118,7 +135,7 @@ public class ContestBot {
 		}
 		return 0;
 	}
-	public int[] sort(int[] hand){
+	public static int[] sort(int[] hand){
 		int tmp;
 		for(int i=0;i<hand.length;i++){
 			for(int j=hand.length-1;j>i;j--){
