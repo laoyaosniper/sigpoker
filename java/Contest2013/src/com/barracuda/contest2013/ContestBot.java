@@ -110,8 +110,8 @@ public class ContestBot {
 				System.err.println("Index:" + index);
 			}
 			myLastCard = hand[index];
-			return hand[0];
-			//return index;
+			//return hand[0];
+			return index;
 		}
 	}
 	private int findCard(int[] hand, int card){
@@ -587,7 +587,9 @@ public class ContestBot {
 						p = base + (sum - boulder) * 0.1;
 					}
 					if ( hand[0] >= 13 && hand[1] >= 13 && hand[3] >= 7 ) {
-						
+						boulder = 33;
+						base = 0.4;
+						p = base + (sum - boulder) * 0.2;
 					}
 				}
 			}
@@ -683,12 +685,18 @@ public class ContestBot {
 						p = p * 0.8;
 					}
 				}
+
 				else if ( ourPoint == 9 ) {
 					int boulder = 30;
 
 					if ( hand[0] >= 10 && hand[1] >= 10 && hand[2] >= 10 ) {
-						base = 0.5;
+						base = 0.4;
 						p = base + (sum - boulder) * 0.1;
+					}
+					if ( hand[0] >= 13 && hand[1] >= 13 && hand[3] >= 7 ) {
+						boulder = 33;
+						base = 0.4;
+						p = base + (sum - boulder) * 0.2;
 					}
 				}
 			}
@@ -731,6 +739,7 @@ public class ContestBot {
 			if(win==0 && lose==0){
 				int sum = hand[0] + hand[1];
 				int boulder = 23;
+				
 				if (ourPoint >= 9) {
 					if ( hand[0] >= 10 && hand[1] >= 10 ) {
 						base = 0.5;
@@ -744,6 +753,22 @@ public class ContestBot {
 						p = p * 0.8;
 					}
 				}
+
+				if ( ourPoint < 9 ) {
+					if ( sum >= boulder) {
+						base = 0.7;
+						p = base + (sum - boulder) * 0.1; 
+						p = p * 0.8;
+					}
+				}
+				else if ( ourPoint == 9 ) {
+					if ( hand[0] >= 13 && hand[1] >= 10 ) {
+						boulder = 33;
+						base = 0.4;
+						p = base + (sum - boulder) * 0.2;
+					}
+				}
+				
 			}
 			else if ( win == 1 && lose == 0 ) {
 				int sum = hand[0];
