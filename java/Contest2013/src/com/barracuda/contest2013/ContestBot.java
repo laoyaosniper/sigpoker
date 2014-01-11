@@ -15,7 +15,6 @@ public class ContestBot {
 	private DecisionMaker dm;
 	private Status status;
 	private boolean isMyTurn;
-	private boolean chanllengeNextTime=false;
 	public ContestBot(String host, int port) {
 		this.host = host;
 		this.port = port;
@@ -23,10 +22,7 @@ public class ContestBot {
 	
 	
 	public class DecisionMaker {
-		void onReceiveResult(Status status, ResultMessage r){	
-			if(isMyTurn&&(r.result.by==r.your_player_num)){
-				chanllengeNextTime = true;
-			}
+		void onReceiveResult(Status status, ResultMessage r){
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
 			int index = -1;
@@ -165,10 +161,7 @@ public class ContestBot {
 		cb.run();
 	}
 	public boolean isChanllenge(MoveMessage m){
-		if(chanllengeNextTime){
-			chanllengeNextTime=false;
-			return true;
-		}
+		
 		if(haveLostHand(m)){
 			return false;
 		}
@@ -262,5 +255,11 @@ public class ContestBot {
 		else{
 			return 1;
 		}
+	}
+	public boolean calculator(int win,int lose){
+		if(win==0&&lose==0){
+			
+		}
+		return false;
 	}
 }
