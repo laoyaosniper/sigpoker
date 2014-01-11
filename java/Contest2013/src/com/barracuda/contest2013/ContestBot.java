@@ -74,7 +74,7 @@ public class ContestBot {
 			
 			if ( strategy == 1 ) {
 				if (totalTime == 1 ) {
-					index = hand[hand.length - 1];
+					index = hand.length - 1;
 				}
 			}
 			return index;
@@ -298,7 +298,7 @@ public class ContestBot {
 			System.out.println("Active: Found Tie!");
 			return false;
 		}
-		System.out.println("Active: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
+//		System.out.println("Active: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 
 		double p = 0.0;
 		double base = 0.4;
@@ -394,7 +394,7 @@ public class ContestBot {
 			return false;
 		}
 
-		System.out.println("Passive: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
+//		System.out.println("Passive: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 		double p = 0.0;
 		double base = 0.4;
 		if ( theirPoint >= 9 ) {
