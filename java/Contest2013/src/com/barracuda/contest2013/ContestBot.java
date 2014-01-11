@@ -14,6 +14,8 @@ public class ContestBot {
 	private int game_id = -1;
 	private DecisionMaker dm;
 	private Status status;
+	private boolean isMyTurn;
+	private boolean chanllengeNextTime=false;
 	public ContestBot(String host, int port) {
 		this.host = host;
 		this.port = port;
@@ -22,18 +24,22 @@ public class ContestBot {
 	
 	public class DecisionMaker {
 		void onReceiveResult(Status status, ResultMessage r){
-			
+			if(isMyTurn&&(r.result.by==r.your_player_num)){
+				chanllengeNextTime = true;
+			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
 			int index = -1;
 			int hand[] = m.state.hand;
 			int their_card = m.state.card;
 			sort(hand);
-			if(their_card<0){
+			if(their_card<=0){
 				//in this round, I play first.
+				isMyTurn = true;
 				index = secondBigger(hand);
 			}
 			else{
+				isMyTurn = false;
 				index = minBigger(hand,m.state.card);
 				//in this round,they play first.
 			}
@@ -97,7 +103,9 @@ public class ContestBot {
 				if (! m.state.can_challenge || isChanllenge(m) == false) {
 					//int i = (int)(Math.random() * m.state.hand.length);
 					int i = dm.onReceiveRequest(status, m);
-					PlayCardMessage card = new PlayCardMessage(m.request_id, m.state.hand[i]);
+					int[] hand = m.state.hand;
+					sort(hand);
+					PlayCardMessage card = new PlayCardMessage(m.request_id,hand[i]);
 					System.out.println(card.toString());
 					return card;
 				}
@@ -153,6 +161,10 @@ public class ContestBot {
 		cb.run();
 	}
 	public boolean isChanllenge(MoveMessage m){
+		if(chanllengeNextTime){
+			chanllengeNextTime=false;
+			return true;
+		}
 		if(haveLostHand(m)){
 			return false;
 		}
@@ -203,7 +215,7 @@ public class ContestBot {
 		for(int i=0;i<hand.length;i++){
 			sum+=hand[i];
 		}
-		if((sum/hand.length)>=10){
+		if((sum/hand.length)>=8){
 			return 1;
 		}
 		return 0;
