@@ -52,13 +52,17 @@ public class ContestBot {
 			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
-			if(m.state.total_tricks==0&&m.state.in_challenge==false&&m.state.card>0){
-				return 9999;
-			}
 			int index = -1;
 			int hand[] = m.state.hand;
 			int their_card = m.state.card;
 			sort(hand);
+			if(m.state.total_tricks==0&&m.state.in_challenge==false&&m.state.card>0
+				&& winTime < 9){
+				double prob = 0.6 + ( hand[2] - 10 ) * 0.2;
+				if ( prob > Math.random()) return 9999;
+				//return 9999;
+			}
+			
 			if(their_card<=0){
 				//in this round, I play first.
 				if (totalTime == 0 ) {
@@ -102,12 +106,18 @@ public class ContestBot {
 				//in this round,they play first.
 			}
 			
-//			if ( m.state.can_challenge && strategy == 1 ) {
-//				if (totalTime == 1 || totalTime == 0) {
-//					index = hand.length - 1;
+//			if ( index < 0 || index >= hand.length ) {
+//				System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime);
+//				System.err.println("Hand: ");
+//				for ( int x : hand ) {
+//					System.err.print(x + " ");
 //				}
+//				
+//				System.err.println("\nIndex:" + index + "\n");
 //			}
-			if ( index < 0 || index >= hand.length ) {
+			myLastCard = hand[index];
+			//return hand[0];
+			if ( index >= hand.length ) {
 				System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime);
 				System.err.println("Hand: ");
 				for ( int x : hand ) {
@@ -115,9 +125,8 @@ public class ContestBot {
 				}
 				
 				System.err.println("\nIndex:" + index + "\n");
+				return 0;
 			}
-			myLastCard = hand[index];
-			//return hand[0];
 			return index;
 		}
 	}
@@ -171,12 +180,23 @@ public class ContestBot {
 	public int wonGames = 0;
 	public int totalGames = 0;
 
+	public int opponent = -1;
 	public PlayerMessage handleMessage(Message message) {
 		if (message.type.equals("request")) {
 			MoveMessage m = (MoveMessage)message;
 			if (game_id != m.state.game_id) {
 				game_id = m.state.game_id;
 //				System.out.println("new game " + game_id);
+				if ( opponent != m.state.opponent_id) {
+					if ( totalGames != 0 ) {
+						double wonRatio = 1.0 * wonGames / totalGames;
+						System.out.println(opponent + " --- " + String.format("%.2f", wonRatio)
+								+ "(W:" + wonGames + " T:" + totalGames + ")");
+					}
+					totalGames = 0;
+					wonGames = 0;
+					opponent = m.state.opponent_id;
+				}
 			}
 
 //			System.out.println(m.toString());
@@ -222,7 +242,7 @@ public class ContestBot {
 			if ( r.result.type.equals("game_won") ) {
 				if ( r.result.by == r.your_player_num ) wonGames++;
 				totalGames++;
-				System.out.println("Won ratio: " + (double)wonGames/totalGames);
+				//System.out.println("Won ratio: " + (double)wonGames/totalGames);
 			}
 //				System.out.println(r.toString());
 			dm.onReceiveResult(status, r);
@@ -362,13 +382,6 @@ public class ContestBot {
 		if ( ourPoint >= 9 ) {
 			return false;
 		}
-
-		if ( theirPoint >= 7 && ourPoint <=5 ) {
-			return true;
-		}
-		if ( theirPoint >= 8 && ourPoint <=7 ) {
-			return true;
-		}
 		
 		sort(hand);
 		if ( tiedTime == 0 ) {
@@ -382,6 +395,7 @@ public class ContestBot {
 
 //					if ( p >= 1.0 ) strategy = 1;
 				}
+//				return false;
 			}
 			else if ( win == 1 && lose == 0 ) {
 				int sum = hand[0] + hand[1];
@@ -396,17 +410,26 @@ public class ContestBot {
 				}
 			}
 			else if ( win == 0 && lose == 1 ) {
-				if ( hand.length != 4) {
+//				if ( hand.length != 4) {
+//					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
+//					System.err.println("Hand: ");
+//					for ( int x : hand ) {
+//						System.err.print(x + " ");
+//					}
+//				}
+				if ( hand.length != 4 ) {
 					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
 					System.err.println("Hand: ");
 					for ( int x : hand ) {
 						System.err.print(x + " ");
 					}
+					System.err.println("\n");
+					return false;
 				}
 				int sum = hand[0] + hand[1] + hand[2];
-				int boulder = 27;
+				int boulder = 30;
 				if ( sum >= boulder ) {
-					base = 0.5;
+					base = 0.3;
 					p = base + (sum - boulder) * 0.1;
 				}
 			}
@@ -415,13 +438,22 @@ public class ContestBot {
 				if ( sum == 13 ) {	// must win
 					return true;
 				}
-				int boulder = 5;
+				int boulder = 10;
 				if ( sum >= boulder ) {
 					base = 0.5;
 					p = base + (sum - boulder) * 0.2;
 				}
 			}
 			else if ( win == 0 && lose == 2 ) {
+				if ( hand.length != 3 ) {
+					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
+					System.err.println("Hand: ");
+					for ( int x : hand ) {
+						System.err.print(x + " ");
+					}
+					System.err.println("\n");
+					return false;
+				}
 				int sum = hand[0] + hand[1] + hand[2];
 				int boulder = 33;
 				if ( sum >= boulder ) {
@@ -448,12 +480,21 @@ public class ContestBot {
 				}
 			}
 			else if ( win == 1 && lose == 2) {
+//				if ( hand.length != 2) {
+//					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
+//					System.err.println("Hand: ");
+//					for ( int x : hand ) {
+//						System.err.print(x + " ");
+//					}
+//				}
 				if ( hand.length != 2) {
 					System.err.println("W:" + winTime + " L:" + loseTime + " T:" + tiedTime + "\n");
 					System.err.println("Hand: ");
 					for ( int x : hand ) {
 						System.err.print(x + " ");
 					}
+					System.err.println("\n");
+					return false;
 				}
 				int sum = hand[0] + hand[1];
 				int boulder = 24;
