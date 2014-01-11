@@ -28,9 +28,9 @@ public class ContestBot {
 			int index = -1;
 			int hand[] = m.state.hand;
 			int their_card = m.state.card;
+			sort(hand);
 			if(their_card<0){
 				//in this round, I play first.
-				sort(hand);
 				index = secondBigger(hand);
 			}
 			else{
