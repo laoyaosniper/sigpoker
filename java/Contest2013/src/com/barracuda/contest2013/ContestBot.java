@@ -64,6 +64,9 @@ public class ContestBot {
 			}
 			
 			if(their_card<=0){
+				if (winTime == 1&&loseTime == 1&&tiedTime ==0){
+					return hand.length-1;
+				}
 				//in this round, I play first.
 				if (totalTime == 0 ) {
 					int idx=-1;
