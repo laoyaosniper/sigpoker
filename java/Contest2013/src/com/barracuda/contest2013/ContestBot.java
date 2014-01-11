@@ -110,7 +110,8 @@ public class ContestBot {
 				System.err.println("Index:" + index);
 			}
 			myLastCard = hand[index];
-			return index;
+			return hand[0];
+			//return index;
 		}
 	}
 	private int findCard(int[] hand, int card){
@@ -118,6 +119,7 @@ public class ContestBot {
 		for(int i=0;i<hand.length;i++){
 			if(hand[i]==card){
 				index = i;
+				break;	
 			}
 		}
 		return index;
