@@ -114,7 +114,7 @@ public class ContestBot {
 				System.out.println("new game " + game_id);
 			}
 
-//			System.out.println(m.toString());
+			System.out.println(m.toString());
 
 			if (m.request.equals("request_card")) {
 				if (! m.state.can_challenge || isChanllenge(m) == false) {
@@ -123,12 +123,12 @@ public class ContestBot {
 					int[] hand = m.state.hand;
 					sort(hand);
 					PlayCardMessage card = new PlayCardMessage(m.request_id,hand[i]);
-//					System.out.println(card.toString());
+					System.out.println(card.toString());
 					return card;
 				}
 				else {
 					OfferChallengeMessage challenge = new OfferChallengeMessage(m.request_id);
-//					System.out.println(challenge.toString());
+					System.out.println(challenge.toString());
 					return challenge;
 				}
 			}
@@ -140,7 +140,7 @@ public class ContestBot {
 				else{
 					response = new RejectChallengeMessage(m.request_id);
 				}
-				//System.out.println(response.toString());
+				System.out.println(response.toString());
 				return response;
 			}
 		}
@@ -151,7 +151,7 @@ public class ContestBot {
 				totalGames++;
 				System.out.println("Won ratio: " + (double)wonGames/totalGames);
 			}
-				//System.out.println(r.toString());
+				System.out.println(r.toString());
 			dm.onReceiveResult(status, r);
 		}
 		else if (message.type.equals("error")) {
@@ -279,8 +279,10 @@ public class ContestBot {
 	public boolean activeChallenge(int[] hand, int win, int lose, int theirPoint){
 		// Check tie
 		if ( hand.length + win + lose < 5) {
+			System.out.println("Active: Found Tie!");
 			return false;
 		}
+		System.out.println("Active: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 
 		double p = 0.0;
 		double base = 0.4;
@@ -369,9 +371,11 @@ public class ContestBot {
 	public boolean passiveChallenge(int[] hand, int win, int lose, int theirPoint){
 		// Check tie
 		if ( hand.length + win + lose < 5) {
+			System.out.println("Passive: Found Tie!");
 			return false;
 		}
 
+		System.out.println("Passive: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 		double p = 0.0;
 		double base = 0.4;
 		if ( theirPoint >= 9 ) {
