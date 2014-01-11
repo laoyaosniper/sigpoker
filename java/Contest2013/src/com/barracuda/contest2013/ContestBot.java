@@ -60,7 +60,7 @@ public class ContestBot {
 			}
 
 			if (m.request.equals("request_card")) {
-				if (! m.state.can_challenge || Math.random() < 0.8) {
+				if (! m.state.can_challenge || isChanllenge(m) == false) {
 					int i = (int)(Math.random() * m.state.hand.length);
 					return new PlayCardMessage(m.request_id, m.state.hand[i]);
 				}
