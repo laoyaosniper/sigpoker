@@ -63,7 +63,7 @@ public class ContestBot {
 				
 			}
 			else{
-				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>8)){
+				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>7)){
 					index = hand.length-1;
 				}
 				else{
