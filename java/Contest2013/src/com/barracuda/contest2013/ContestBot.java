@@ -118,4 +118,27 @@ public class ContestBot {
 		}
 		return 0;
 	}
+	public int[] sort(int[] hand){
+		int tmp;
+		for(int i=0;i<hand.length;i++){
+			for(int j=hand.length-1;j>i;j--){
+				if(hand[j]>hand[j-1]){
+					tmp = hand[j];
+					hand[j] = hand[j-1];
+					hand[j-1] = tmp;
+				}
+			}
+		}
+		return hand;
+	}
+	//called after sort();
+	public int minBigger(int [] hand, int card){
+		int index = -1;
+		for(int i=0;i<hand.length;i++){
+			if(hand[i]>card){
+				index = i;
+			}
+		}
+		return index;
+	}
 }
