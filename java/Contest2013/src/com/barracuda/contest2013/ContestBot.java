@@ -23,7 +23,7 @@ public class ContestBot {
 	
 	
 	public class DecisionMaker {
-		void onReceiveResult(Status status, ResultMessage r){
+		void onReceiveResult(Status status, ResultMessage r){	
 			if(isMyTurn&&(r.result.by==r.your_player_num)){
 				chanllengeNextTime = true;
 			}
@@ -219,6 +219,7 @@ public class ContestBot {
 		for(int i=0;i<hand.length;i++){
 			sum+=hand[i];
 		}
+		
 		if((sum/hand.length)>=8){
 			return 1;
 		}
