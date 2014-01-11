@@ -51,6 +51,12 @@ public class ContestBot {
 		}
 	}
 
+	public enum HandStatus {
+	  ISSUE, RESPONSE, RESULT
+	}
+	
+	public HandStatus myStatus;
+	
 	public PlayerMessage handleMessage(Message message) {
 		if (message.type.equals("request")) {
 			MoveMessage m = (MoveMessage)message;
@@ -58,24 +64,53 @@ public class ContestBot {
 				game_id = m.state.game_id;
 				System.out.println("new game " + game_id);
 			}
-
+			
+            System.out.println(m.toString());
+            
 			if (m.request.equals("request_card")) {
+	            if ( m.state.card > 0 ) {
+	              myStatus = HandStatus.RESPONSE;
+	            }
+	            else {
+	              myStatus = HandStatus.ISSUE;
+	            }
+	            System.out.println(m.sigPokerToString(myStatus));
+	            
 				if (! m.state.can_challenge || Math.random() < 0.8) {
 					int i = (int)(Math.random() * m.state.hand.length);
-					return new PlayCardMessage(m.request_id, m.state.hand[i]);
+					PlayCardMessage card = new PlayCardMessage(m.request_id, m.state.hand[i]);
+//					System.out.println(card.sigPokerToString(myStatus));
+					System.out.println(card.toString());
+					return card;
 				}
 				else {
-					return new OfferChallengeMessage(m.request_id);
+					OfferChallengeMessage challenge = new OfferChallengeMessage(m.request_id);
+//					System.out.println(challenge.sigPokerToString(myStatus));
+					System.out.println(challenge.toString());
+					return challenge;
 				}
 			}
 			else if (m.request.equals("challenge_offered")) {
-				return (Math.random() < 0.5)
-						? new AcceptChallengeMessage(m.request_id)
-						: new RejectChallengeMessage(m.request_id);
+			  PlayerMessage response;
+			  if ( Math.random() < 0.5 ) {
+			    response = new AcceptChallengeMessage(m.request_id);
+			  }
+			  else {
+			    response = new RejectChallengeMessage(m.request_id);
+			  }
+//			  System.out.println(response.sigPokerToString(myStatus));
+			  System.out.println(response.toString());
+			  return response;
+//				return (Math.random() < 0.5)
+//						? new AcceptChallengeMessage(m.request_id)
+//						: new RejectChallengeMessage(m.request_id);
 			}
 		}
 		else if (message.type.equals("result")) {
-			//ResultMessage r = (ResultMessage)message;
+		  
+			ResultMessage r = (ResultMessage)message;
+//	        System.out.println(r.sigPokerToString(myStatus));
+			System.out.println(r.toString());
 		}
 		else if (message.type.equals("error")) {
 			ErrorMessage e = (ErrorMessage)message;

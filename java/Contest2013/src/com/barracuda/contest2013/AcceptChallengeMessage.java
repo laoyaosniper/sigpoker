@@ -1,5 +1,7 @@
 package com.barracuda.contest2013;
 
+import com.barracuda.contest2013.ContestBot.HandStatus;
+
 public class AcceptChallengeMessage extends PlayerMessage {
 
 	public AcceptChallengeMessage(int request_id) {
@@ -11,4 +13,12 @@ public class AcceptChallengeMessage extends PlayerMessage {
 	public String toString() {
 		return "Accept Challenge\n";
 	}
+
+  /* (non-Javadoc)
+   * @see com.barracuda.contest2013.Message#sigPokerToString(com.barracuda.contest2013.ContestBot.HandStatus)
+   */
+  @Override
+  public String sigPokerToString(HandStatus status) {
+    return "Accept Challenge\n";
+  }
 }
