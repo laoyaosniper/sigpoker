@@ -53,10 +53,13 @@ public class ContestBot {
 			sort(hand);
 			if(their_card<=0){
 				//in this round, I play first.
-				index = secondBigger(hand);
 				if (totalTime == 0 ) {
 					index = 2;
 				}
+				else {
+					index = secondBigger(hand);
+				}
+				
 				if ( tiedTime == 0 ) {
 					if ( winTime == 1 && loseTime == 2)	index = 0;
 				}
@@ -418,7 +421,7 @@ public class ContestBot {
 				}
 			}
 			else if ( ourPoint == 9 ) {
-				int boulder = 27;
+				int boulder = 28;
 
 				if ( sum >= boulder ) {
 					base = 0.5;
