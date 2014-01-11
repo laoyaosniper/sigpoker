@@ -40,6 +40,7 @@ public class ContestBot {
 				winTime = 0;
 				loseTime = 0;
 				totalTime = 0;
+				tiedTime = 0;
 			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
