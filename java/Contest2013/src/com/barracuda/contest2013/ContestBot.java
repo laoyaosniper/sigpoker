@@ -105,7 +105,8 @@ public class ContestBot {
 //				}
 //			}
 			myLastCard = hand[index];
-			return index;
+			return hand[0];
+			//return index;
 		}
 	}
 	private int findCard(int[] hand, int card){
