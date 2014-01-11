@@ -15,7 +15,7 @@ public class ContestBot {
 	private int game_id = -1;
 	private DecisionMaker dm;
 	private Status status;
-	private boolean isMyTurn;
+//	private boolean isMyTurn;
 	public ContestBot(String host, int port) {
 		this.host = host;
 		this.port = port;
@@ -25,17 +25,20 @@ public class ContestBot {
 	private int loseTime = 0;
 	private int tiedTime = 0;
 	private int totalTime = 0;
-	private int strategy = 1;
+//	private int strategy = 1;
+	private int myLastCard = -1;
+	private int theirLastCard = -1;
 	public class DecisionMaker {
 		void onReceiveResult(Status status, ResultMessage r){
 			if ( r.result.type.equals("trick_won")) {
 				if ( r.result.by == r.your_player_num ) winTime++;
 				else loseTime++;
-				
+				theirLastCard = r.result.card;
 				totalTime++;
 			}
 			if ( r.result.type.equals("trick_tied")) {
 				tiedTime++;
+				theirLastCard = myLastCard;
 				totalTime++;
 			}
 			if ( r.result.type.equals("hand_done") ) {
@@ -43,7 +46,9 @@ public class ContestBot {
 				loseTime = 0;
 				totalTime = 0;
 				tiedTime = 0;
-				strategy = 0;
+//				strategy = 0;
+				myLastCard = -1;
+				theirLastCard = -1;
 			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
@@ -53,7 +58,6 @@ public class ContestBot {
 			sort(hand);
 			if(their_card<=0){
 				//in this round, I play first.
-				index = secondBigger(hand);
 				if (totalTime == 0 ) {
 					int idx=-1;
 					for(int i=0;i<hand.length;i++){
@@ -67,6 +71,10 @@ public class ContestBot {
 				else if(totalTime == 1){
 					index = 2;
 				}
+				else {
+					index = secondBigger(hand);
+				}
+				
 				if ( tiedTime == 0 ) {
 					if ( winTime == 1 && loseTime == 2)	index = 0;
 				}
@@ -76,7 +84,8 @@ public class ContestBot {
 				
 			}
 			else{
-				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>7)){
+				theirLastCard = their_card;
+				if((m.state.card>hand[hand.length-1])&&((m.state.card-hand[hand.length-1])>6)){
 					index = hand.length-1;
 				}
 				else if((findCard(hand,m.state.card)==hand.length-1||
@@ -90,11 +99,12 @@ public class ContestBot {
 				//in this round,they play first.
 			}
 			
-			if ( strategy == 1 ) {
-				if (totalTime == 1 ) {
-					index = hand.length - 1;
-				}
-			}
+//			if ( m.state.can_challenge && strategy == 1 ) {
+//				if (totalTime == 1 || totalTime == 0) {
+//					index = hand.length - 1;
+//				}
+//			}
+			myLastCard = hand[index];
 			return index;
 		}
 	}
@@ -135,6 +145,7 @@ public class ContestBot {
 			}
 			catch (Exception e) {
 				System.err.println("Error: " + e.toString());
+				e.printStackTrace();
 				System.err.println("Reconnecting in " + RECONNECT_TIMEOUT + "s");
 				try {
 					Thread.sleep(RECONNECT_TIMEOUT * 1000);
@@ -159,7 +170,7 @@ public class ContestBot {
 
 			if (m.request.equals("request_card")) {
 				boolean shouldPlay = (! m.state.can_challenge || isChanllenge(m) == false);
-				shouldPlay = shouldPlay || (strategy == 1 && totalTime <=1);
+//				shouldPlay = shouldPlay || (strategy == 1 && totalTime <=1);
 				if ( shouldPlay ) {
 					//int i = (int)(Math.random() * m.state.hand.length);
 					int i = dm.onReceiveRequest(status, m);
@@ -237,7 +248,7 @@ public class ContestBot {
 //			return true;
 //		}
 		
-		return activeChallenge(m.state.hand, winTime, loseTime, m.state.their_points);
+		return activeChallenge(m.state.hand, winTime, loseTime, m.state.their_points, m.state.your_points);
 //		return true;
 	}
 	public boolean haveLostHand(MoveMessage m){
@@ -321,94 +332,205 @@ public class ContestBot {
 			return 1;
 		}
 	}
-	public boolean activeChallenge(int[] hand, int win, int lose, int theirPoint){
-		// Check tie
-		if ( hand.length + win + lose < 5) {
-//			System.out.println("Active: Found Tie!");
-			return false;
-		}
+	public boolean activeChallenge(int[] hand, int win, int lose, int theirPoint, int ourPoint){
 //		System.out.println("Active: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 
 		double p = 0.0;
 		double base = 0.4;
 		if ( theirPoint >= 9 ) {
-			base = 1.0;
+			return true;
+		}
+		if ( ourPoint >= 9 ) {
+			return false;
 		}
 		sort(hand);
-		if(win==0 && lose==0){
-			int sum = hand[0] + hand[1] + hand[2];
-			int boulder = 30;
-			if ( hand[0] >= 9 && hand[1] >= 9 && hand[2] >= 9
-				&& sum >= boulder) {
-				base = 0.4;
-				p = base + (sum - boulder) * 0.20; 
-				
-				if ( p >= 1.0 ) strategy = 1;
+		if ( tiedTime == 0 ) {
+			if(win==0 && lose==0){
+				int sum = hand[0] + hand[1] + hand[2];
+				int boulder = 33;
+				if ( hand[0] >= 10 && hand[1] >= 10 && hand[2] >= 10
+						&& sum >= boulder) {
+					base = 0.4;
+					p = base + (sum - boulder) * 0.20; 
+
+//					if ( p >= 1.0 ) strategy = 1;
+				}
+			}
+			else if ( win == 1 && lose == 0 ) {
+				int sum = hand[0] + hand[1];
+				int boulder = 20;
+				int decrement = 0;
+				if ( theirLastCard > 0 && theirLastCard < 6 ) {
+					decrement  = 6 - theirLastCard;
+				}
+				if ( sum - decrement >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 0 && lose == 1 ) {
+				int sum = hand[0] + hand[1] + hand[2];
+				int boulder = 27;
+				if ( sum >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 2 && lose == 0 ) {
+				int sum = hand[0];
+				if ( sum == 13 ) {	// must win
+					return true;
+				}
+				int boulder = 5;
+				if ( sum >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.2;
+				}
+			}
+			else if ( win == 0 && lose == 2 ) {
+				int sum = hand[0] + hand[1] + hand[2];
+				int boulder = 33;
+				if ( sum >= boulder ) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.2;
+
+				}
+			}
+			else if ( win == 1 && lose == 1) {
+				int sum = hand[0] + hand[1];
+				int boulder = 22;
+				if ( sum >= boulder ) {
+					base = 0.4;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 2 && lose == 1) {
+				int sum = hand[0];
+				if ( sum == 13 ) {	// must win
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else if ( win == 1 && lose == 2) {
+				int sum = hand[0] + hand[1];
+				int boulder = 24;
+				if ( sum >= boulder ) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.2;
+				}
+			}
+			else if ( win == 2 && lose == 2) {
+				int sum = hand[0];
+				if ( sum == 13 ) {	// must win
+					return true;
+				}
+				int boulder = 11;
+				if ( sum >= boulder ) {
+					base = 0.6;
+					p = base + (sum - boulder) * 0.4;
+				}
 			}
 		}
-		else if ( win == 1 && lose == 0 ) {
-			int sum = hand[0] + hand[1];
-			int boulder = 20;
-			if ( sum >= boulder ) {
-				base = 0.5;
-				p = base + (sum - boulder) * 0.1;
+		else if ( tiedTime == 1 ) {
+			if(win==0 && lose==0){
+				int sum = hand[0] + hand[1] + hand[2];
+				int boulder = 32;
+				if ( sum >= boulder) {
+					base = 0.4;
+					p = base + (sum - boulder) * 0.20; 
+
+//					if ( p >= 1.0 ) strategy = 1;
+				}
+			}
+			else if ( win == 1 && lose == 0 ) {
+				int sum = hand[0];
+				if ( sum == 13 ) {	// must win
+					return true;
+				}
+				int boulder = 11;
+				int decrement = 0;
+				if ( theirLastCard > 0 && theirLastCard < 6 ) {
+					decrement  = 6 - theirLastCard;
+				}
+				if ( sum - decrement >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 0 && lose == 1 ) {
+				int sum = hand[0] + hand[1] + hand[2];
+				int boulder = 30;
+				if ( sum >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 1 && lose == 1) {
+				int sum = hand[0] + hand[1];
+				int boulder = 23;
+				if ( sum >= boulder ) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 2) {
+				return true;
+			}
+			else if ( lose == 2 ) {
+				return false;
 			}
 		}
-		else if ( win == 0 && lose == 1 ) {
-			int sum = hand[0] + hand[1] + hand[2];
-			int boulder = 27;
-			if ( sum >= boulder ) {
-				base = 0.5;
-				p = base + (sum - boulder) * 0.1;
+		else if ( tiedTime == 2 ) {
+			if(win==0 && lose==0){
+				int sum = hand[0] + hand[1];
+				int boulder = 23;
+				if ( sum >= boulder) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.10; 
+				}
+			}
+			else if ( win == 1 && lose == 0 ) {
+				int sum = hand[0];
+				if ( sum == 13 ) {	// must win
+					return true;
+				}
+				int boulder = 11;
+				int decrement = 0;
+				if ( theirLastCard > 0 && theirLastCard < 6 ) {
+					decrement  = 6 - theirLastCard;
+				}
+				if ( sum - decrement >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 0 && lose == 1 ) {
+				int sum = hand[0] + hand[1];
+				int boulder = 34;
+				if ( sum >= boulder ) {
+					return true;
+				}
+			}
+			else if ( win == 1 && lose == 1) {
+				return false;
 			}
 		}
-		else if ( win == 2 && lose == 0 ) {
-			int sum = hand[0];
-			int boulder = 5;
-			if ( sum >= boulder ) {
-				base = 0.5;
-				p = base + (sum - boulder) * 0.2;
+		else if ( tiedTime == 3 ) {
+			if(win==0 && lose==0){
+				int sum = hand[0] + hand[1];
+				int boulder = 23;
+				if ( sum >= boulder) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.10; 
+				}
 			}
-		}
-		else if ( win == 0 && lose == 2 ) {
-			int sum = hand[0] + hand[1] + hand[2];
-			int boulder = 30;
-			if ( sum >= boulder ) {
-				base = 0.8;
-				p = base + (sum - boulder) * 0.2;
-				
+			else if ( win == 1 && lose == 0 ) {
+				return true;
 			}
-		}
-		else if ( win == 1 && lose == 1) {
-			int sum = hand[0] + hand[1];
-			int boulder = 18;
-			if ( sum >= boulder ) {
-				base = 0.4;
-				p = base + (sum - boulder) * 0.1;
-			}
-		}
-		else if ( win == 2 && lose == 1) {
-			int sum = hand[0];
-			int boulder = 11;
-			if ( sum >= boulder ) {
-				base = 0.6;
-				p = base + (sum - boulder) * 0.15;
-			}
-		}
-		else if ( win == 1 && lose == 2) {
-			int sum = hand[0] + hand[1];
-			int boulder = 21;
-			if ( sum >= boulder ) {
-				base = 0.5;
-				p = base + (sum - boulder) * 0.2;
-			}
-		}
-		else if ( win == 2 && lose == 2) {
-			int sum = hand[0];
-			int boulder = 11;
-			if ( sum >= boulder ) {
-				base = 0.6;
-				p = base + (sum - boulder) * 0.4;
+			else if ( win == 0 && lose == 1 ) {
+				return false;
 			}
 		}
 		
@@ -417,113 +539,220 @@ public class ContestBot {
 	}
 
 	public boolean passiveChallenge(int[] hand, int win, int lose, int theirPoint, int ourPoint){
-		// Check tie
-		if ( hand.length + win + lose < 5) {
-//			System.out.println("Passive: Found Tie!");
-			return false;
-		}
-
 //		System.out.println("Passive: Win:" + winTime + " Lose:" + loseTime + " Tied:" + tiedTime);
 		double p = 0.0;
 		double base = 0.4;
 		if ( theirPoint >= 9 ) {
-			base = 1.0;
+			return true;
 		}
 		sort(hand);
-		if(win==0 && lose==0){
-			int sum = hand[0] + hand[1] + hand[2];
-			if ( ourPoint < 9 ) {
-				int boulder = 30;
-				if ( hand[0] >= 9 && hand[1] >= 9 && hand[2] >= 9
-						&& sum >= boulder) {
-					base = 0.4;
-					p = base + (sum - boulder) * 0.1; 
-					p = p * 0.9;
+		if ( tiedTime == 0 ) {
+			if(win==0 && lose==0){
+				int sum = hand[0] + hand[1] + hand[2];
+				if ( ourPoint < 9 ) {
+					int boulder = 33;
+					if ( hand[0] >= 10 && hand[1] >= 10 && hand[2] >= 10
+							&& sum >= boulder) {
+						base = 0.4;
+						p = base + (sum - boulder) * 0.1; 
+						p = p * 0.8;
+					}
+				}
+				else if ( ourPoint == 9 ) {
+					int boulder = 30;
+
+					if ( hand[0] >= 10 && hand[1] >= 10 && hand[2] >= 10 ) {
+						base = 0.4;
+						p = base + (sum - boulder) * 0.1;
+					}
+					if ( hand[0] >= 13 && hand[1] >= 13 && hand[3] >= 7 ) {
+						
+					}
 				}
 			}
-			else if ( ourPoint == 9 ) {
-				int boulder = 27;
-
+			else if ( win == 1 && lose == 0 ) {
+				int sum = hand[0] + hand[1];
+				int boulder = 23;
 				if ( sum >= boulder ) {
 					base = 0.5;
 					p = base + (sum - boulder) * 0.1;
+
+					p = p*1.1;
+				}
+			}
+			else if ( win == 0 && lose == 1 ) {
+				int sum = hand[0] + hand[1] + hand[2];
+				int boulder = 35;
+				if ( sum >= boulder ) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.1;
+
+					p = p*0.9;
+				}
+			}
+			else if ( win == 1 && lose == 1) {
+				int sum = hand[0] + hand[1];
+				int boulder = 23;
+				if ( sum >= boulder ) {
+					base = 0.7;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 2 && lose == 0 ) {
+				int sum = hand[0];
+				if ( sum == 13 ) {	// must win
+					return true;
+				}
+				int boulder = 5;
+				if ( sum >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.2;
+				}
+			}
+			else if ( win == 0 && lose == 2 ) {
+				int sum = hand[0] + hand[1] + hand[2];
+				int boulder = 36;
+				if ( sum >= boulder ) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.1;
+
+				}
+			}
+			else if ( win == 2 && lose == 1) {
+				int sum = hand[0];
+				if ( sum == 13 ) {	// must win
+					return true;
+				}
+				int boulder = 11;
+				if ( sum >= boulder ) {
+					base = 0.6;
+					p = base + (sum - boulder) * 0.15;
+
+					p = p*1.1;
+				}
+			}
+			else if ( win == 1 && lose == 2) {
+				int sum = hand[0] + hand[1];
+				int boulder = 23;
+				if ( sum >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.2;
+
+					p = p*0.9;
+				}
+			}
+			else if ( win == 2 && lose == 2) {
+				int sum = hand[0];
+				if ( sum == 13 ) {	// must win
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+		} 
+		else if ( tiedTime == 1 ) {
+			if(win==0 && lose==0){
+				int sum = hand[0] + hand[1] + hand[2];
+				if ( ourPoint < 9 ) {
+					int boulder = 30;
+					if ( sum >= boulder) {
+						base = 0.4;
+						p = base + (sum - boulder) * 0.1; 
+						p = p * 0.8;
+					}
+				}
+				else if ( ourPoint == 9 ) {
+					int boulder = 30;
+
+					if ( hand[0] >= 10 && hand[1] >= 10 && hand[2] >= 10 ) {
+						base = 0.5;
+						p = base + (sum - boulder) * 0.1;
+					}
+				}
+			}
+			else if ( win == 1 && lose == 0 ) {
+				int sum = hand[0] + hand[1];
+				int boulder = 22;
+				if ( sum >= boulder ) {
+					base = 0.5;
+					p = base + (sum - boulder) * 0.1;
+
+					p = p*1.1;
+				}
+			}
+			else if ( win == 0 && lose == 1 ) {
+				int sum = hand[0] + hand[1] + hand[2];
+				int boulder = 33;
+				if ( sum >= boulder ) {
+					base = 0.7;
+					p = base + (sum - boulder) * 0.1;
+
+					p = p*0.9;
+				}
+			}
+			else if ( win == 1 && lose == 1) {
+				int sum = hand[0] + hand[1];
+				int boulder = 24;
+				if ( sum >= boulder ) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.1;
+				}
+			}
+			else if ( win == 2 ) {
+				return true;
+			}
+			else if ( lose == 2 ) {
+				return false;
+			}
+		}
+		else if ( tiedTime == 2 ) {
+			if(win==0 && lose==0){
+				int sum = hand[0] + hand[1];
+				int boulder = 23;
+				if (ourPoint >= 9) {
+					if ( hand[0] >= 10 && hand[1] >= 10 ) {
+						base = 0.5;
+						p = base + (sum - boulder) * 0.1;
+					}
+				}
+				else {
+					if ( sum >= boulder) {
+						base = 0.7;
+						p = base + (sum - boulder) * 0.1; 
+						p = p * 0.8;
+					}
+				}
+			}
+			else if ( win == 1 && lose == 0 ) {
+				int sum = hand[0];
+				if ( sum == 13 ) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else if ( win == 0 && lose == 1 ) {
+				int sum = hand[0] + hand[1];
+				int boulder = 36;
+				if ( sum >= boulder ) {
+					base = 0.8;
+					p = base + (sum - boulder) * 0.1;
+
+					p = p*0.9;
+				}
+			}
+			else if ( win == 1 && lose == 1) {
+				int sum = hand[0];
+				if ( sum == 13 ) {
+					return true;
+				}
+				else {
+					return false;
 				}
 			}
 		}
-		else if ( win == 1 && lose == 0 ) {
-			int sum = hand[0] + hand[1];
-			int boulder = 20;
-			if ( sum >= boulder ) {
-				base = 0.5;
-				p = base + (sum - boulder) * 0.1;
-				
-				p = p*1.1;
-			}
-		}
-		else if ( win == 0 && lose == 1 ) {
-			int sum = hand[0] + hand[1] + hand[2];
-			int boulder = 27;
-			if ( sum >= boulder ) {
-				base = 0.5;
-				p = base + (sum - boulder) * 0.1;
-				
-				p = p*0.9;
-			}
-		}
-		else if ( win == 2 && lose == 0 ) {
-			int sum = hand[0];
-			int boulder = 5;
-			if ( sum >= boulder ) {
-				base = 0.5;
-				p = base + (sum - boulder) * 0.2;
-			}
-		}
-		else if ( win == 0 && lose == 2 ) {
-			int sum = hand[0] + hand[1] + hand[2];
-			int boulder = 30;
-			if ( sum >= boulder ) {
-				base = 0.8;
-				p = base + (sum - boulder) * 0.2;
-				
-			}
-		}
-		else if ( win == 1 && lose == 1) {
-			int sum = hand[0] + hand[1];
-			int boulder = 18;
-			if ( sum >= boulder ) {
-				base = 0.4;
-				p = base + (sum - boulder) * 0.1;
-			}
-		}
-		else if ( win == 2 && lose == 1) {
-			int sum = hand[0];
-			int boulder = 11;
-			if ( sum >= boulder ) {
-				base = 0.6;
-				p = base + (sum - boulder) * 0.15;
-				
-				p = p*1.1;
-			}
-		}
-		else if ( win == 1 && lose == 2) {
-			int sum = hand[0] + hand[1];
-			int boulder = 21;
-			if ( sum >= boulder ) {
-				base = 0.5;
-				p = base + (sum - boulder) * 0.2;
-				
-				p = p*0.9;
-			}
-		}
-		else if ( win == 2 && lose == 2) {
-			int sum = hand[0];
-			int boulder = 11;
-			if ( sum >= boulder ) {
-				base = 0.6;
-				p = base + (sum - boulder) * 0.4;
-			}
-		}
-		
 		return (p > Math.random()) ? true : false; 
 	}
 }
