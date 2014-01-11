@@ -52,7 +52,7 @@ public class ContestBot {
 			}
 		}
 		int onReceiveRequest(Status status, MoveMessage m){
-			if(m.state.hand_id==1&&m.state.in_challenge==false&&m.state.card>0){
+			if(m.state.total_tricks==0&&m.state.in_challenge==false&&m.state.card>0){
 				return 9999;
 			}
 			int index = -1;
