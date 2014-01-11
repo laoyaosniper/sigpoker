@@ -12,13 +12,39 @@ public class ContestBot {
 	private final String host;
 	private final int port;
 	private int game_id = -1;
-	private int current_hand=-1;
+	private DecisionMaker dm;
+	private Status status;
 	public ContestBot(String host, int port) {
 		this.host = host;
 		this.port = port;
 	}
-
+	
+	
+	public class DecisionMaker {
+		void onReceiveResult(Status status, ResultMessage r){
+			
+		}
+		int onReceiveRequest(Status status, MoveMessage m){
+			int index = -1;
+			int hand[] = m.state.hand;
+			int their_card = m.state.card;
+			if(their_card<0){
+				//in this round, I play first.
+				sort(hand);
+				index = secondBigger(hand);
+			}
+			else{
+				index = minBigger(hand,m.state.card);
+				//in this round,they play first.
+			}
+			return index;
+		}
+	}
+	
+	
 	private void run() {
+		dm = new DecisionMaker();
+		status = new Status();
 		while (true) {
 			// just reconnect upon any failure
 			try {
@@ -72,7 +98,8 @@ public class ContestBot {
 
 			if (m.request.equals("request_card")) {
 				if (! m.state.can_challenge || isChanllenge(m) == false) {
-					int i = (int)(Math.random() * m.state.hand.length);
+					//int i = (int)(Math.random() * m.state.hand.length);
+					int i = dm.onReceiveRequest(status, m);
 					PlayCardMessage card = new PlayCardMessage(m.request_id, m.state.hand[i]);
 //					System.out.println(card.toString());
 					return card;
@@ -103,6 +130,7 @@ public class ContestBot {
 				System.out.println("Won ratio: " + wonGames/totalGames);
 			}
 				//System.out.println(r.toString());
+			dm.onReceiveResult(status, r);
 		}
 		else if (message.type.equals("error")) {
 			ErrorMessage e = (ErrorMessage)message;
@@ -129,7 +157,10 @@ public class ContestBot {
 		cb.run();
 	}
 	public boolean isChanllenge(MoveMessage m){
-		if(myHandQuality(m.state.hand,m.state.hand_id)>0){
+		if(haveLostHand(m)){
+			return false;
+		}
+		if(isHandBig(m.state.hand)>0){
 			return true;
 		}
 		else if(m.state.their_points>8){
@@ -158,6 +189,9 @@ public class ContestBot {
 		else if(haveLostHand(m)){
 			return false;
 		}
+		else if(isHandBig(m.state.hand)==1){
+			return true;
+		}
 		return false;
 	}
 	public int myHandQuality(int[] hand,int hid){
@@ -168,7 +202,17 @@ public class ContestBot {
 		}
 		return 0;
 	}
-	public static int[] sort(int[] hand){
+	public int isHandBig(int[] hand){
+		int sum = 0;
+		for(int i=0;i<hand.length;i++){
+			sum+=hand[i];
+		}
+		if((sum/hand.length)>=10){
+			return 1;
+		}
+		return 0;
+	}
+	public  int[] sort(int[] hand){
 		int tmp;
 		for(int i=0;i<hand.length;i++){
 			for(int j=hand.length-1;j>i;j--){
@@ -189,6 +233,21 @@ public class ContestBot {
 				index = i;
 			}
 		}
-		return index;
+		if(index>=0){
+			return index;
+		}
+		return hand.length-1;
+	}
+	//called after sort();
+	public int secondBigger(int [] hand){
+		if(hand.length==0){
+			return -1;
+		}
+		if(hand.length<=2){
+			return 0;
+		}
+		else{
+			return 1;
+		}
 	}
 }
