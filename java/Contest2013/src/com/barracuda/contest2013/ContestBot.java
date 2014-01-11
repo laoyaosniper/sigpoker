@@ -52,10 +52,10 @@ public class ContestBot {
 				isMyTurn = true;
 				index = secondBigger(hand);
 				if ( tiedTime == 0 ) {
-					if ( winTime == 1 && loseTime == 2)	index = hand[0];
+					if ( winTime == 1 && loseTime == 2)	index = 0;
 				}
 				else {
-					if ( loseTime >= 1 ) index = hand[0];
+					if ( loseTime >= 1 ) index = 0;
 				}
 			}
 			else{
