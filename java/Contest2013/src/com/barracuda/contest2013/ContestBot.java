@@ -561,8 +561,11 @@ public class ContestBot {
 					int boulder = 30;
 
 					if ( hand[0] >= 10 && hand[1] >= 10 && hand[2] >= 10 ) {
-						base = 0.5;
+						base = 0.4;
 						p = base + (sum - boulder) * 0.1;
+					}
+					if ( hand[0] >= 13 && hand[1] >= 13 && hand[3] >= 7 ) {
+						
 					}
 				}
 			}
